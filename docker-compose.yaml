@@ -1,0 +1,48 @@
+version: "3"
+services:
+ db:
+  image: mysql:5.7
+  volumes:
+   - "./db/mysql:/var/lib/mysql"
+   - "./db/mysql/my.cnf:/etc/my.cnf"
+   - "./:/docker-entrypoint-initdb.d"
+  # container_name: db
+  environment:
+   - MYSQL_ROOT_PASSWORD=admin
+
+  restart: always
+ 
+ phpmyadmin:
+  image: phpmyadmin/phpmyadmin
+  environment:
+    - PMA_ARBITRARY=1
+    - PMA_HOST=mysql
+    - PMA_USER=root
+    - PMA_PASSWORD=admin
+  links:
+   - db
+  ports:
+   - 8000:80
+  depends_on: ["db"]
+  volumes:
+   - "./phpmyadmin/:/sessions"
+  restart: always
+
+ php:
+  image: php:7-fpm
+  volumes:
+   - ./html:/var/www/html
+   - ./php/php.ini:/usr/local/etc/php/php.ini
+  depends_on: ["db"]
+  restart: always
+
+ nginx:
+  image: nginx:latest
+  volumes: 
+      #  - ./html:/usr/share/nginx/html
+   - ./html:/var/www/hdockertml
+   - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    #  - ./html/:/var/lib/docker/volumes/my-data/_data
+  restart: always
+  ports: ["8080:80"]
+  depends_on: ["php"] 
